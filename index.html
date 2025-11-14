@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Shaman - Elemental Chaos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Courier New', monospace;
+            color: #0f0;
+        }
+
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .ui-panel {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid rgba(0, 255, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        #stats {
+            top: 10px;
+            left: 10px;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        #health-bar {
+            top: 10px;
+            right: 10px;
+            min-width: 250px;
+        }
+
+        .bar-container {
+            width: 200px;
+            height: 20px;
+            background: #222;
+            border: 1px solid #0f0;
+            margin: 5px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .health-fill {
+            background: linear-gradient(90deg, #f00, #ff0);
+            box-shadow: 0 0 10px #f00;
+        }
+
+        .mana-fill {
+            background: linear-gradient(90deg, #00f, #0ff);
+            box-shadow: 0 0 10px #00f;
+        }
+
+        .bar-text {
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            font-size: 11px;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+            z-index: 1;
+        }
+
+        #wand-info {
+            bottom: 10px;
+            left: 10px;
+            max-width: 400px;
+        }
+
+        .spell-slot {
+            display: inline-block;
+            padding: 3px 8px;
+            margin: 2px;
+            background: rgba(100, 100, 255, 0.3);
+            border: 1px solid #55f;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+
+        .spell-modifier {
+            background: rgba(255, 100, 255, 0.3);
+            border-color: #f5f;
+        }
+
+        #status-effects {
+            top: 120px;
+            right: 10px;
+        }
+
+        .status-icon {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            background: rgba(255, 0, 0, 0.3);
+            border: 1px solid #f00;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        #perks-panel {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            min-width: 400px;
+            z-index: 1000;
+        }
+
+        .perk-option {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(0, 100, 100, 0.3);
+            border: 2px solid #0aa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .perk-option:hover {
+            background: rgba(0, 150, 150, 0.5);
+            border-color: #0ff;
+            transform: translateX(5px);
+        }
+
+        .perk-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #0ff;
+        }
+
+        .perk-desc {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 3px;
+        }
+
+        #controls {
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #888;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border: 3px solid #f00;
+            border-radius: 10px;
+        }
+
+        #game-over h1 {
+            color: #f00;
+            font-size: 48px;
+            text-shadow: 0 0 20px #f00;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            background: #0a0;
+            border: 2px solid #0f0;
+            color: #000;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .button:hover {
+            background: #0f0;
+            box-shadow: 0 0 20px #0f0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="stats" class="ui-panel">
+        <div>FPS: <span id="fps">60</span></div>
+        <div>Depth: <span id="depth">0</span>m</div>
+        <div>Gold: <span id="gold">0</span></div>
+        <div>Kills: <span id="kills">0</span></div>
+    </div>
+
+    <div id="health-bar" class="ui-panel">
+        <div class="bar-container">
+            <div class="bar-text">HP: <span id="hp-text">100/100</span></div>
+            <div class="bar-fill health-fill" id="hp-bar" style="width: 100%"></div>
+        </div>
+        <div class="bar-container">
+            <div class="bar-text">Mana: <span id="mana-text">100/100</span></div>
+            <div class="bar-fill mana-fill" id="mana-bar" style="width: 100%"></div>
+        </div>
+    </div>
+
+    <div id="wand-info" class="ui-panel">
+        <div><strong>Wand:</strong> <span id="wand-name">Starter Wand</span></div>
+        <div id="spell-list"></div>
+        <div style="margin-top: 5px; font-size: 10px;">
+            Delay: <span id="cast-delay">0.3</span>s |
+            Recharge: <span id="recharge">1.0</span>s |
+            Spread: <span id="spread">5</span>°
+        </div>
+    </div>
+
+    <div id="status-effects" class="ui-panel" style="display: none;">
+        <div id="status-list"></div>
+    </div>
+
+    <div id="perks-panel" class="ui-panel">
+        <h2 style="text-align: center; color: #0ff; margin-bottom: 15px;">Choose a Perk</h2>
+        <div id="perk-options"></div>
+    </div>
+
+    <div id="controls" class="ui-panel">
+        WASD: Move | Mouse: Aim | Click: Cast<br>
+        Q/E: Switch Wand | R: Pick up Wand | ESC: Quit
+    </div>
+
+    <div id="game-over">
+        <h1>YOU DIED</h1>
+        <div style="color: #aaa; margin: 20px 0;">
+            <div>Depth Reached: <span id="final-depth">0</span>m</div>
+            <div>Enemies Killed: <span id="final-kills">0</span></div>
+            <div>Gold Collected: <span id="final-gold">0</span></div>
+        </div>
+        <button class="button" onclick="location.reload()">Restart</button>
+    </div>
+
+    <script src="src/config.js"></script>
+    <script src="src/materials.js"></script>
+    <script src="src/noise.js"></script>
+    <script src="src/physics.js"></script>
+    <script src="src/spells.js"></script>
+    <script src="src/wands.js"></script>
+    <script src="src/enemies.js"></script>
+    <script src="src/perks.js"></script>
+    <script src="src/biomes.js"></script>
+    <script src="src/player.js"></script>
+    <script src="src/game.js"></script>
+    <script>
+        // Start game
+        window.addEventListener('load', () => {
+            new Game('gameCanvas');
+        });
+    </script>
+</body>
+</html>
