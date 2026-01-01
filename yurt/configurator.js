@@ -6,23 +6,43 @@ import { UIController } from './UIController.js';
 
 class YurtConfigurator {
     constructor() {
+        console.log('YurtConfigurator constructor started');
+
         this.canvas = document.getElementById('canvas');
         this.loadingEl = document.getElementById('loading');
 
+        console.log('Initializing scene...');
         this.initScene();
+
+        console.log('Initializing lights...');
         this.initLights();
+
+        console.log('Initializing controls...');
         this.initControls();
 
+        console.log('Creating ConfigManager...');
         this.configManager = new ConfigManager();
+
+        console.log('Creating YurtBuilder...');
         this.yurtBuilder = new YurtBuilder(this.scene, this.configManager);
+
+        console.log('Creating UIController...');
         this.uiController = new UIController(this.configManager, this.yurtBuilder);
 
+        console.log('Setting up event listeners...');
         this.setupEventListeners();
+
+        console.log('Starting animation loop...');
         this.animate();
 
         // Initial build
+        console.log('Building initial yurt...');
         this.yurtBuilder.build();
+
+        console.log('Hiding loading screen...');
         this.hideLoading();
+
+        console.log('YurtConfigurator initialization complete!');
     }
 
     initScene() {
@@ -244,5 +264,20 @@ class YurtConfigurator {
 
 // Initialize when DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
-    new YurtConfigurator();
+    try {
+        console.log('Initializing Yurt Configurator...');
+        new YurtConfigurator();
+    } catch (error) {
+        console.error('Failed to initialize configurator:', error);
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            loadingEl.innerHTML = `
+                <div style="color: #f00;">
+                    <h3>Error Loading Configurator</h3>
+                    <p>${error.message}</p>
+                    <p style="font-size: 12px;">Check browser console for details</p>
+                </div>
+            `;
+        }
+    }
 });
